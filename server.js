@@ -26,7 +26,7 @@ const db = mysql.createConnection(
 
 // IMPORTANT: this method is the key component that allows SQL commands to be written in a Node.js applicaiton 
 // Breakdown: The db object is using the SQL query() method which executes the callback with the resulting rows that match the query - More explanation in 12.2.4
-// Get all candidates
+// Get all candidates and their party affiliation
 app.get('/api/candidates', (req, res) => {
   const sql = `SELECT candidates.*, parties.name
                AS party_name
@@ -46,7 +46,7 @@ app.get('/api/candidates', (req, res) => {
   });
 });
 
-// Get a single candidate
+// Get a single candidate with party affiliation
 app.get('/api/candidate/:id', (req, res) => {
     const sql = `SELECT candidates.*, parties.name
                  AS party_name
@@ -83,7 +83,7 @@ app.get('/api/parties', (req, res) => {
     });
 });
 
-// GET route that includes an 'id' parameter for a single party to display a single party
+// GET route that displays a single party
 app.get('/api/party/:id', (req, res) => {
     const sql = `SELECT * FROM parties WHERE id = ?`;
     const params = [req.params.id];
@@ -107,6 +107,7 @@ app.delete('/api/candidate/:id', (req, res) => {
   db.query(sql, params, (err, result) => {
     if (err) {
       res.statusMessage(400).json({ error: res.message });
+    //   checks if anything was deleted
     } else if (!result.affectedRows) {
       res.json({
         message: 'Candidate not found'
@@ -145,6 +146,7 @@ app.delete('/api/party/:id', (req, res) => {
 
 // Create a candidate
 app.post('/api/candidate', ({ body }, res) => {
+    // Candidate is allowed not to be affiliated with a party
     const errors = inputCheck(body, 'first_name', 'last_name', 'industry_connected');
     if (errors) {
       res.status(400).json({ error: errors });
@@ -168,8 +170,8 @@ app.post('/api/candidate', ({ body }, res) => {
 
 // Update a candidate's party
 app.put('/api/candidate/:id', (req, res) => {
+    // candidate is allowed to now have party affiliation
     const errors = inputCheck(req.body, 'party_id');
-    // TODO check if this part of cod is correct
     if (errors) {
         res.status(400).json({ error: errors });
         return;
